@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src\backend">
+      <UniqueIdentifier>{D1C49369-3496-4E16-BA6E-23C911A2D105}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\common">
+      <UniqueIdentifier>{ADABC779-1D18-4D98-8EAA-F4B6D4E32D80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\engine">
+      <UniqueIdentifier>{4A63AA8F-603E-429D-964F-BD12988EB084}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\front">
+      <UniqueIdentifier>{B6306FA2-9813-463A-AC7E-67DE36D4174B}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\common\json_mini.cpp">
+      <Filter>src\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\common\settings.cpp">
+      <Filter>src\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\engine\util.cpp">
+      <Filter>src\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\backend\backend_common.cpp">
+      <Filter>src\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\backend\be_null.cpp">
+      <Filter>src\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\backend\be_wasapi.cpp">
+      <Filter>src\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\backend\be_ks.cpp">
+      <Filter>src\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\backend\be_asio.cpp">
+      <Filter>src\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\engine\engine.cpp">
+      <Filter>src\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\front\asio_driver.cpp">
+      <Filter>src\front</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\common\asio_abi.h">
+      <Filter>src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\common\bs_common.h">
+      <Filter>src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\common\json_mini.h">
+      <Filter>src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\common\settings.h">
+      <Filter>src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\engine\util.h">
+      <Filter>src\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\engine\ring.h">
+      <Filter>src\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\engine\engine.h">
+      <Filter>src\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\backend\backend.h">
+      <Filter>src\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\backend\backend_util.h">
+      <Filter>src\backend</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

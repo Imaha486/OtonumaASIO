@@ -1,0 +1,52 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure x64
+        run: cmake -B build64 -A x64
+      - name: Build x64
+        run: cmake --build build64 --config Release
+
+      - name: Configure x86
+        run: cmake -B build32 -A Win32
+      - name: Build x86
+        run: cmake --build build32 --config Release
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $ver = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME } else { "dev-$($env:GITHUB_SHA.Substring(0,7))" }
+          $dir = "OtonumaASIO-$ver-win"
+          New-Item -ItemType Directory $dir | Out-Null
+          Copy-Item build64/Release/OtonumaASIO64.dll, build64/Release/OtonumaPanel.exe, build64/Release/otonumareg.exe, build64/Release/asiohosttest.exe $dir
+          Copy-Item build32/Release/OtonumaASIO32.dll $dir
+          Copy-Item build32/Release/asiohosttest.exe "$dir/asiohosttest32.exe"
+          Copy-Item docs/manual.html, LICENSE, README.md, CHANGELOG.md, scripts/install.bat, scripts/uninstall.bat $dir
+          Compress-Archive -Path "$dir/*" -DestinationPath "$dir.zip"
+          "ZIP=$dir.zip" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OtonumaASIO-win
+          path: ${{ env.ZIP }}
+
+      - name: Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ZIP }}
+          body_path: release-notes/${{ github.ref_name }}.md

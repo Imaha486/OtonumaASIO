@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OtonumaASIO 1.1.1 マニュアル</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1d1f21;--mute:#5d6166;--line:#dcdcd6;--card:#ffffff;--acc:#2f5f9e;--acc2:#e8eef7;--warn:#9a5b00;--warnbg:#fdf4e4;--ok:#2d7a46;--code:#f1f1ec}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--fg:#e4e4e1;--mute:#a2a6ab;--line:#34383d;--card:#1e2125;--acc:#8db4ea;--acc2:#23303f;--warn:#e5b35a;--warnbg:#2e2616;--ok:#7cc79a;--code:#262a2f}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.8 "Yu Gothic UI","Meiryo","Hiragino Sans","Noto Sans JP",sans-serif}
+.wrap{display:grid;grid-template-columns:250px minmax(0,1fr);max-width:1240px;margin:0 auto}
+nav{position:sticky;top:0;height:100vh;overflow:auto;padding:28px 18px 28px 24px;border-right:1px solid var(--line);font-size:13.5px}
+nav b{display:block;font-size:15px;margin-bottom:10px}
+nav a{display:block;color:var(--mute);text-decoration:none;padding:3px 0}
+nav a:hover{color:var(--acc)}
+nav a.sub{padding-left:14px;font-size:12.5px}
+main{padding:36px 48px 80px;min-width:0}
+h1{font-size:30px;line-height:1.35;margin:0 0 6px}
+h2{font-size:22px;margin:56px 0 14px;padding-top:12px;border-top:2px solid var(--fg)}
+h3{font-size:17px;margin:32px 0 8px}
+p{margin:10px 0}
+.lead{color:var(--mute);font-size:16px;margin:0 0 24px}
+code,kbd{font-family:Consolas,"Cascadia Mono",monospace;font-size:.9em;background:var(--code);padding:1px 5px;border-radius:4px}
+pre{background:var(--code);padding:14px 16px;border-radius:8px;overflow:auto;font-size:13px;line-height:1.6}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:12px 0;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;padding:0 7px;border-radius:10px;border:1px solid currentColor;margin-left:6px;vertical-align:2px}
+.now{color:var(--ok)} .reopen{color:var(--acc)} .reset{color:var(--warn)}
+.note{border-left:4px solid var(--acc);background:var(--acc2);padding:10px 14px;border-radius:0 6px 6px 0;margin:14px 0}
+.warn{border-left:4px solid var(--warn);background:var(--warnbg);padding:10px 14px;border-radius:0 6px 6px 0;margin:14px 0}
+.param{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 20px 12px;margin:18px 0}
+.param h3{margin:0 0 4px;font-size:17px}
+.param .meta{color:var(--mute);font-size:13px;margin-bottom:8px}
+.param dl{display:grid;grid-template-columns:118px minmax(0,1fr);gap:4px 14px;margin:8px 0}
+.param dt{font-weight:700;color:var(--mute);font-size:13.5px;padding-top:1px}
+.param dd{margin:0}
+.updown{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0 6px}
+.updown div{border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:14px}
+.updown b{display:block;font-size:13px;color:var(--acc)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.preset{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px}
+.preset h4{margin:0 0 6px}
+.preset table{font-size:13.5px}
+svg text{font-family:"Yu Gothic UI","Meiryo",sans-serif}
+.diagram{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin:14px 0;overflow:auto}
+footer{margin-top:60px;color:var(--mute);font-size:13px;border-top:1px solid var(--line);padding-top:14px}
+@media (max-width:900px){.wrap{grid-template-columns:1fr}nav{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}main{padding:24px 18px}.cols,.updown{grid-template-columns:1fr}.param dl{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+<b>OtonumaASIO 1.1.1</b>
+<a href="#overview">概要</a>
+<a href="#arch">仕組み</a>
+<a href="#install">インストール</a>
+<a href="#build">ビルド</a>
+<a href="#usage">使い方</a>
+<a href="#tray">タスクトレイ常駐</a>
+<a href="#outputs">出力方式の詳細</a>
+<a href="#params">パラメータ詳解</a>
+<a class="sub" href="#p-out">出力方式・デバイス</a>
+<a class="sub" href="#p-hostbuf">ホスト側バッファ</a>
+<a class="sub" href="#p-pacer">受け渡し周期</a>
+<a class="sub" href="#p-pump">ポンプモード・先読み量</a>
+<a class="sub" href="#p-drive">駆動方式</a>
+<a class="sub" href="#p-ksq">KS キュー深さ</a>
+<a class="sub" href="#p-rtlead">WaveRT 書き込み先行量</a>
+<a class="sub" href="#p-prio">出力スレッド優先度</a>
+<a class="sub" href="#p-core">CPU コア固定</a>
+<a class="sub" href="#p-timer">タイマー分解能</a>
+<a class="sub" href="#p-memlock">メモリ固定</a>
+<a class="sub" href="#p-dsd">DSD の送り方・DoP 上限</a>
+<a class="sub" href="#p-silence">開始時の無音</a>
+<a class="sub" href="#p-drain">停止時に鳴らし切る</a>
+<a class="sub" href="#p-fallback">KS→WASAPI 自動切替</a>
+<a href="#taste">音の好みから設定を探す</a>
+<a href="#dsd">DSD</a>
+<a href="#telemetry">計測の読み方</a>
+<a href="#abx">ブラインド A/B（ABX）</a>
+<a href="#test">試験のしかた</a>
+<a href="#trouble">困ったとき</a>
+<a href="#internals">内部仕様</a>
+<a href="#history">変更履歴</a>
+</nav>
+<main>
+
+<h1>OtonumaASIO マニュアル</h1>
+<p class="lead"><b>音沼の住民に向けた、DAC への受け渡しを細かく追い込むための仮想 ASIO ドライバ。</b>再生ソフトからは普通の ASIO ドライバ 1 本に見え、その裏で DAC への受け渡し方式とバッファ・周期を、再生しながら切り替えて好みの音を探すための仮想 ASIO ドライバです。版 1.1.1。</p>
+
+<h2 id="overview">概要</h2>
+<div class="note">1.0.x までは「BareStream Local」という名前でした。1.1.0 から OtonumaASIO に変わり、再生ソフトの出力先の名前も「OtonumaASIO」になります。<code>install.bat</code> は旧名の登録・常駐・ショートカット・フォルダを自動で片付け、設定とプリセットは初回起動時に自動で引き継ぎます。</div>
+<ul>
+<li><b>ビットパーフェクト</b>: 音量・ディザ・リサンプルは一切しません。形式変換は整数のコンテナ詰め替え（32bit → 詰めた 24bit など）だけで、削る下位ビットに 0 以外が入っていれば警告します。</li>
+<li><b>ユーザーモードだけで完結</b>: カーネルドライバを作らないので、ドライバ署名は不要です。DLL を登録するだけで動きます。</li>
+<li><b>出口を選べる</b>: ASIO 中継・WASAPI 排他・Kernel Streaming（パケット方式 / WaveRT 方式）・試験用の null。</li>
+<li><b>確かめられる</b>: 起床間隔のばらつき、アンダーラン、パイプライン内のビット一致を常時表示し、ブラインド A/B（ABX）で本当に聞き分けられるかを統計的に判定できます。</li>
+<li>対象: Windows 10 / 11 x64。32bit の再生ソフト向けに 32bit 版 DLL も同梱しています。</li>
+</ul>
+
+<h2 id="arch">仕組み</h2>
+<div class="diagram">
+<svg viewBox="0 0 900 250" width="100%" role="img" aria-label="再生ソフトからDACまでのデータの流れ">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="currentColor"/></marker></defs>
+<g fill="none" stroke="currentColor" stroke-width="1.4" style="color:var(--mute)">
+<rect x="10" y="80" width="130" height="70" rx="8"/>
+<rect x="190" y="80" width="140" height="70" rx="8"/>
+<rect x="380" y="80" width="150" height="70" rx="8"/>
+<rect x="580" y="20" width="150" height="40" rx="6"/>
+<rect x="580" y="70" width="150" height="40" rx="6"/>
+<rect x="580" y="120" width="150" height="40" rx="6"/>
+<rect x="580" y="170" width="150" height="40" rx="6"/>
+<rect x="780" y="80" width="110" height="70" rx="8"/>
+<path d="M140,115H186" marker-end="url(#ar)"/>
+<path d="M330,115H376" marker-end="url(#ar)"/>
+<path d="M530,115L576,40" marker-end="url(#ar)"/>
+<path d="M530,115L576,90" marker-end="url(#ar)"/>
+<path d="M530,115L576,140" marker-end="url(#ar)"/>
+<path d="M530,115L576,190" marker-end="url(#ar)"/>
+<path d="M730,40L776,105" marker-end="url(#ar)"/>
+<path d="M730,90L776,110" marker-end="url(#ar)"/>
+<path d="M730,140L776,120" marker-end="url(#ar)"/>
+<path d="M730,190L776,125" marker-end="url(#ar)"/>
+</g>
+<g fill="currentColor" style="color:var(--fg)" font-size="14" text-anchor="middle">
+<text x="75" y="110">再生ソフト</text><text x="75" y="130" font-size="11.5" fill="currentColor" style="color:var(--mute)">ASIO ホスト</text>
+<text x="260" y="108">ポンプスレッド</text><text x="260" y="128" font-size="11.5">ホスト側バッファ</text>
+<text x="455" y="108">リングバッファ</text><text x="455" y="128" font-size="11.5">先読み量・ビット一致検査</text>
+<text x="655" y="45">ASIO 中継</text><text x="655" y="95">WASAPI 排他</text><text x="655" y="145">KS パケット</text><text x="655" y="195">KS WaveRT</text>
+<text x="835" y="110">DAC</text><text x="835" y="130" font-size="11.5">USB など</text>
+<text x="555" y="238" font-size="12">← 受け渡し周期（Hz）・駆動方式・優先度で「出力スレッド」の動き方を決める →</text>
+</g>
+</svg>
+</div>
+<p>再生ソフトへのコールバック（bufferSwitch）は、DAC ではなく自前の<b>ポンプスレッド</b>が駆動します。再生ソフトから受け取ったデータはいったん<b>リングバッファ</b>に入り、別の<b>出力スレッド</b>が「受け渡し周期」ごとに出口（ドライバ）へ渡します。この 2 段構えのおかげで、再生ソフト側のバッファと DAC 側の受け渡しを独立に調整できます。</p>
+<div class="note">USB の転送そのもの（ハイスピード USB では 125 µs ごとのマイクロフレーム）と、1 パケットあたりのサンプル数（非同期 USB DAC では DAC からのフィードバックで決まる）、DAC のクロックは、どのパラメータでも変わりません。変えられるのは「PC の中で、いつ・どれだけの量を・どの経路で」ドライバへ渡すか、です。</div>
+
+<h2 id="install">インストール</h2>
+<h3>バッチファイルでインストールする（おすすめ）</h3>
+<ol>
+<li>zip を展開したフォルダの <code>install.bat</code> をダブルクリックします。管理者権限の確認（UAC）が出るので「はい」を選びます。</li>
+<li>次のことを自動で行います: <code>C:\Program Files\OtonumaASIO\</code> へのコピー、ASIO ドライバの登録（64bit / 32bit）、スタートメニューへのショートカット作成（コントロールパネル・マニュアル・アンインストール）。</li>
+<li>「Windows の起動時にコントロールパネルをタスクトレイに常駐させますか」と聞かれるので、Y（常駐する）か N を押します。</li>
+<li>最後にコントロールパネルが開きます。</li>
+</ol>
+<p>アンインストールは、スタートメニューの「OtonumaASIO アンインストール」または <code>uninstall.bat</code> を実行します。ドライバの登録解除、常駐とショートカットの削除、インストール先フォルダの削除を行い、設定（プリセットを含む <code>settings.json</code>）を消すかどうかを確認します。</p>
+<div class="note">どちらも、再生ソフトがドライバを使っている間は実行できません（使用中と表示されたら、再生ソフトを終了してからやり直してください）。常駐の設定はバッチを実行したユーザーに対して行います。管理者に昇格するとき別のアカウント名を入力した場合は、常駐はパネルの右クリックメニューから設定し直してください。</div>
+<h3>手動でインストールする</h3>
+<ol>
+<li>DLL 2 つ（<code>OtonumaASIO64.dll</code>・<code>OtonumaASIO32.dll</code>）と <code>OtonumaPanel.exe</code>・<code>otonumareg.exe</code> を同じフォルダに置きます（例: <code>C:\Program Files\OtonumaASIO\</code>）。<b>登録後にフォルダを動かすと動かなくなる</b>ので、先に置き場所を決めます。</li>
+<li>コマンドプロンプトでそのフォルダに移り、<code>otonumareg install</code> を実行します（管理者権限の確認が出ます）。</li>
+<li><code>otonumareg status</code> で 64bit / 32bit の登録先が出れば完了。解除は <code>otonumareg uninstall</code>。</li>
+</ol>
+<p>再生ソフト（TuneBrowser / foobar2000 など）の出力先に <b>OtonumaASIO</b> が現れます。</p>
+<div class="warn">未署名の DLL なので、ウイルス対策ソフトがブロック・誤検知することがあります。その場合は配置フォルダを検査の除外に追加してください（ESET: 詳細設定 → 検出エンジン → 除外 → パフォーマンスの除外）。</div>
+<p>更新するときは、再生ソフトを終了してから DLL（64 / 32）と <code>OtonumaPanel.exe</code> を上書きします。置き場所が同じなら <code>otonumareg install</code> のやり直しは不要です。DLL と OtonumaPanel は計測データの形式を共有しているので、<b>必ず両方そろえて</b>入れ替えてください。</p>
+
+<h2 id="build">ビルド</h2>
+<h3>Visual Studio 2026</h3>
+<ol>
+<li>「C++ によるデスクトップ開発」ワークロード（MSVC v145・Windows SDK）を入れます。</li>
+<li><code>OtonumaASIO.sln</code>（または新形式の <code>OtonumaASIO.slnx</code>）を開きます。</li>
+<li>構成 <b>Release</b>、プラットフォーム <b>x64</b> でビルド。続けて <b>x86</b> でもビルドします。</li>
+<li>出力: <code>bin\x64\Release\</code> に 64bit 版一式、<code>bin\Win32\Release\OtonumaASIO32.dll</code> に 32bit 版 DLL。</li>
+</ol>
+<p>設定の要点: ツールセット v145、C++17、<code>/utf-8</code>、Unicode、ランタイム静的リンク（/MT、VC++ 再頒布パッケージ不要）。Steinberg ASIO SDK は不要です（IASIO は自前定義）。</p>
+<h3>CMake</h3>
+<pre><code>cmake -B build -A x64 &amp;&amp; cmake --build build --config Release
+cmake -B build32 -A Win32 &amp;&amp; cmake --build build32 --config Release</code></pre>
+<p>mingw-w64 でのクロスビルドにも対応しています（開発時の検証はこれと Wine で行っています）。</p>
+
+<h2 id="usage">使い方</h2>
+<ol>
+<li>再生ソフトの出力先を OtonumaASIO（ASIO）にします。</li>
+<li><code>OtonumaPanel.exe</code> を開きます（再生ソフトの ASIO 設定ボタンからも開けます）。</li>
+<li>出力方式・出力デバイスを選んで「適用」。</li>
+<li>再生しながら受け渡し周期や駆動方式を変えて聴き比べます。右上に「いま何が起きているか」が出ます。</li>
+</ol>
+<p>パネルの各項目の右にある記号が反映のしかたです。</p>
+<table>
+<tr><th>記号</th><th>意味</th></tr>
+<tr><td><span class="tag now">即</span></td><td>すぐ反映。音は途切れません。</td></tr>
+<tr><td><span class="tag reopen">開</span></td><td>出力（ドライバ側）だけ開き直します。一瞬途切れます。</td></tr>
+<tr><td><span class="tag reset">再</span></td><td>再生ソフトに再初期化を要求します。多くの再生ソフトは自動で開き直し、1〜2 秒途切れます。</td></tr>
+</table>
+
+<h2 id="tray">タスクトレイ常駐</h2>
+<p><code>OtonumaPanel.exe</code> は起動するとタスクトレイ（通知領域）にアイコンを置きます。ウインドウの × や最小化ではトレイに格納され、終了はしません。</p>
+<table>
+<tr><th>操作</th><th>動作</th></tr>
+<tr><td>アイコンをクリック</td><td>コントロールパネルを開く</td></tr>
+<tr><td>アイコンにマウスを載せる</td><td>状態（再生中のレート・形式・出力方式、アンダーランの回数）を表示</td></tr>
+<tr><td>右クリック →「プリセットを適用」</td><td>保存したプリセットをその場で適用（反映のしかたは通知で表示）</td></tr>
+<tr><td>右クリック →「Windows の起動時に常駐する」</td><td>オンにすると、サインイン時にトレイに格納した状態で起動します（<code>HKCU\…\Run</code> に登録。オフで登録を消します）</td></tr>
+<tr><td>右クリック →「終了」</td><td>パネルを終了します（ドライバの動作には影響しません）</td></tr>
+</table>
+<p>アイコン右下の丸で状態が分かります。</p>
+<table>
+<tr><th>表示</th><th>状態</th></tr>
+<tr><td>丸なし</td><td>再生ソフトで OtonumaASIO が使われていない</td></tr>
+<tr><td>灰色</td><td>使われているが停止中</td></tr>
+<tr><td>緑</td><td>再生中</td></tr>
+<tr><td>橙</td><td>再生中で、直近 10 秒以内にアンダーランが起きた</td></tr>
+</table>
+<p>パネルを開いている間は表示を毎秒 5 回更新しますが、トレイに格納している間は状態の読み取りを 2 秒に 1 回まで落とし、再生中の PC の起床を最小限にします。再生ソフトの ASIO 設定ボタンを押したときも、常駐中のパネルが開きます。コマンドラインで <code>OtonumaPanel.exe /tray</code> とすると、ウインドウを開かずトレイに格納した状態で起動します。</p>
+
+<h2 id="outputs">出力方式の詳細</h2>
+<table>
+<tr><th>出力方式</th><th>経路</th><th>周期を決めるもの</th><th>DSD</th></tr>
+<tr><td>ASIO 中継</td><td>OtonumaASIO がホストになってベンダーの ASIO ドライバを開き、その上で流す</td><td>ベンダー ASIO のバッファサイズ（ドライバが許す値に丸める）</td><td>ネイティブ / DoP</td></tr>
+<tr><td>WASAPI 排他</td><td>IAudioClient の排他モード。Windows のオーディオエンジン（ミキサー）を通らない</td><td>デバイス周期（最小周期と整列の制約あり）</td><td>DoP</td></tr>
+<tr><td>KS パケット</td><td>ドライバの KS ピンを直接開き、<code>IOCTL_KS_WRITE_STREAM</code> でパケットを送る（AVStream 系、usbaudio2.sys など）</td><td>1 パケットの量</td><td>DoP</td></tr>
+<tr><td>KS WaveRT</td><td>ドライバの循環バッファをユーザー空間にマップして直接書く（PortCls WaveRT 系、内蔵オーディオなど）</td><td>通知周期または書き込み先行量</td><td>DoP</td></tr>
+<tr><td>KS（自動選択）</td><td>上の 2 つのうちドライバが対応する方を、プロパティの応答で自動判定</td><td>—</td><td>DoP</td></tr>
+<tr><td>BareStream ネットワーク</td><td>既存の BareStream サーバへ送る（今後統合予定。この版では未対応）</td><td>—</td><td>—</td></tr>
+<tr><td>null（試験用）</td><td>音を出さず定周期で消費。環境変数で書き出しも可能</td><td>受け渡し周期</td><td>DoP</td></tr>
+</table>
+<div class="note"><b>なぜ KS や WASAPI ではネイティブ DSD にならないのか</b>: Windows 標準の USB オーディオクラスドライバ（usbaudio2.sys）や WASAPI には DSD のビット列をそのまま渡す形式がありません。そのため PCM の箱に DSD を詰める DoP（DSD over PCM）を使います。DAC 側の表示が DoP になるのは正常です。ネイティブ DSD が使えるのは、ベンダーの ASIO ドライバが対応している場合の ASIO 中継だけです。ただし、ベンダーのドライバが USB に送る段階で DoP に変換している場合もあり、そのときは DAC の表示が DoP になります（OtonumaASIO からは切り替えられません）。</div>
+<h3>出力方式ごとの注意</h3>
+<ul>
+<li><b>KS</b>: Windows の共有モード（audiodg）がそのデバイスを使っていると、ピンが開けません。Windows の「サウンド」設定で既定のデバイスを別の出力先にしてください。</li>
+<li><b>WASAPI 排他</b>: デバイスのプロパティ → 詳細 →「アプリケーションによりこのデバイスを排他的に制御できるようにする」にチェックが必要です。</li>
+<li><b>ASIO 中継</b>: 中継先は <code>HKLM\SOFTWARE\ASIO</code> に登録されたドライバから選びます（自分自身は除外）。USB 側のバッファ（ストリーミングモードなど）は「ベンダーのコントロールパネル」ボタンから変更します。</li>
+</ul>
+
+<h2 id="params">パラメータ詳解</h2>
+<p>それぞれのパラメータについて、何を決めるのか、値を上げる・下げると PC の中で何が起きるのかを説明します。「音がどう変わるか」は聴き手と機器によって異なり、確立した測定上の根拠がないものも多いため、<a href="#taste">音の好みから設定を探す</a>の章で分けて扱います。</p>
+
+<div class="param" id="p-out">
+<h3>出力方式・出力デバイス <span class="tag reset">再</span></h3>
+<div class="meta">既定: KS（自動選択） / デバイスは前回値</div>
+<dl>
+<dt>決めるもの</dt><dd>リングから DAC ドライバへ渡す経路（API）と相手のデバイス。</dd>
+<dt>技術的な違い</dt><dd>経路ごとに、ドライバの中を通る層の数と、データを渡すときの起床のしかたが違います。ASIO 中継はベンダー独自のドライバのスケジューリングに従い、ベンダーのバッファ設定がそのまま効きます。WASAPI 排他はオーディオエンジンを迂回しますが、WASAPI の層と整列の制約が残ります。KS パケットは WASAPI の層も通らず、ドライバのピンへ直接 IRP（I/O 要求）を送ります。KS WaveRT はドライバのバッファに直接書くので、データの受け渡しに I/O 要求すら発生しません（位置の読み取りだけ）。</dd>
+<dt>選び方</dt><dd>まず確実に鳴る WASAPI 排他で基準を作り、KS（D400EX ではパケット方式）と ASIO 中継を比べるのが手堅い進め方です。DSD をネイティブで送りたいなら ASIO 中継です。</dd>
+</dl>
+</div>
+
+<div class="param" id="p-hostbuf">
+<h3>ホスト側バッファ <span class="tag reset">再</span></h3>
+<div class="meta">範囲: 32〜32768 サンプル（2 のべき乗） / 既定: 1024</div>
+<dl>
+<dt>決めるもの</dt><dd>再生ソフトに渡す ASIO バッファの長さ。再生ソフトが 1 回のコールバックで作る量で、再生ソフトのデコード・DSP スレッドが起きる回数（= サンプルレート ÷ この値 回/秒）を決めます。</dd>
+<dt>出力側との関係</dt><dd>DAC への受け渡しとは独立です。ここを小さくしても DAC 側の周期は変わりません（それは受け渡し周期の役目）。</dd>
+</dl>
+<div class="updown">
+<div><b>大きくすると</b>再生ソフトの起床が減り、1 回の処理がまとめて行われます。CPU の割り込み・切り替えは減り、遅延（再生位置と実際の音のずれ、シークの反応）は増えます。</div>
+<div><b>小さくすると</b>再生ソフトが細かく頻繁に起きます。遅延は減りますが、ポンプスレッドと再生ソフトのスレッド切り替えが増え、CPU 負荷が上がります。極端に小さいと間に合わずアンダーランします。</div>
+</div>
+<dl>
+<dt>DSD のとき</dt><dd>DSD では、DSD のレートに比例させて最低約 5.8 ms ぶん（この値 1024 相当）を提示します。DSD256 で 32 サンプル（約 45 µs）のような設定は毎秒 2 万回以上の呼び出しになり破綻するためです。</dd>
+<dt>目安</dt><dd>1024〜4096。遅延を気にしないなら大きめが安定します。</dd>
+</dl>
+</div>
+
+<div class="param" id="p-pacer">
+<h3>受け渡し周期（Hz） <span class="tag reopen">開</span></h3>
+<div class="meta">範囲: 1〜1000 / 既定: 10（JPLAY の「10 Hz（基準）」に合わせた値）</div>
+<dl>
+<dt>決めるもの</dt><dd>出力スレッドがドライバへデータを渡す頻度。1 回に渡す量 = サンプルレート ÷ 指定 Hz です（44.1 kHz なら 10 Hz → 4410 サンプル ≒ 100 ms、700 Hz → 63 サンプル ≒ 1.4 ms）。実際の値は出口が受け付ける最も近い値に丸め、パネルに「指定値 → 実効値」を出します。</dd>
+<dt>出口ごとの意味</dt><dd>ASIO 中継: ベンダー ASIO のバッファサイズ（2 のべき乗などに丸まる）。WASAPI 排他（イベント）: デバイス周期 = バッファ長。デバイスの最小周期（USB DAC では 3 ms 前後が多い）より短くはできません。KS パケット: 1 パケットの長さ。KS WaveRT（通知あり）: 循環バッファの半分。タイマー駆動: タイマーの周期。</dd>
+</dl>
+<div class="updown">
+<div><b>高くすると（1 回の量が小さい）</b>出力スレッドの起床・ドライバへの I/O 要求・割り込みが 1 秒あたり増えます。データは小分けに途切れなく流れ、ドライバ内に溜まる量（遅延）が減ります。その代わり 1 回の遅れの許容時間が短くなり、アンダーランしやすくなります。CPU が深い省電力状態（C ステート）に入る時間も減ります。</div>
+<div><b>低くすると（1 回の量が大きい）</b>起床はまれで、そのたびにまとまった量を一気に渡します。CPU は長く休めますが、渡す瞬間はメモリとバスの動きが集中します。遅延は増え、設定変更やシークの反応も遅くなります。アンダーランには強くなります。</div>
+</div>
+</div>
+
+<div class="param" id="p-pump">
+<h3>ポンプモード・先読み量 <span class="tag now">即</span></h3>
+<div class="meta">ポンプモード: 同期 / 先読み（既定: 同期） ・ 先読み量: 0.05〜2 秒（既定 2、先読みモード時に有効）</div>
+<dl>
+<dt>決めるもの</dt><dd>リングバッファにどれだけ溜めておくか。同期モードはホスト側バッファ 2 つ分程度だけ溜め、出口が消費したぶんだけ再生ソフトを呼びます（普通の ASIO と同じ振る舞い）。先読みモードは指定秒数ぶんを溜めておき、再生ソフトが一時的に遅れても（ディスクやネットワークの待ち、他の処理）出口は影響を受けません。</dd>
+</dl>
+<div class="updown">
+<div><b>先読み量を増やすと</b>再生ソフトの一時的な停止に強くなります。ただし溜めた量だけシーク・曲送り・一時停止の反応が遅れて聞こえ、メモリも使います（384 kHz / 32bit / 2ch で 1 秒あたり約 3 MB）。容量を超えて増やしたときは、リングを作り直すため一瞬音が飛びます。</div>
+<div><b>同期モード・少なめにすると</b>操作への反応が速く、遅延が小さくなります。再生ソフト側の遅れがそのままアンダーランにつながりやすくなります。</div>
+</div>
+<dl>
+<dt>曲送りの表示がずれる</dt><dd>再生ソフトから見ると、曲の最後のデータを渡し終えた時点で曲が終わったことになるので、まだ前の曲の最後（先読み量の秒数ぶん）が鳴っているうちに次の曲の表示に進みます。OtonumaASIO はドライバなので曲の区切りを知ることができず、これは先読みの仕組み上避けられません。そのため先読み量の上限は 2 秒にしています。曲全体を RAM に載せてから鳴らしたい場合は、再生ソフト側の機能（foobar2000 の Full file buffering など）を使う方が、表示がずれず筋がよい方法です。</dd>
+<dt>補足</dt><dd>溜まりきった後は、先読みモードでも再生ソフトを呼ぶ平均の頻度は同期モードと同じです（消費したぶんを補充するため）。先読みは「余裕」を増やす設定で、処理の総量を減らすものではありません。後から書き込む再生ソフト（パネルに「後から書き込み」と出る）では、溜まる速さが実時間の約 1.3 倍までになります。</dd>
+</dl>
+</div>
+
+<div class="param" id="p-drive">
+<h3>駆動方式 <span class="tag reopen">開</span></h3>
+<div class="meta">イベント / タイマー / タイマー＋スピン（既定: イベント）</div>
+<dl>
+<dt>決めるもの</dt><dd>出力スレッドを何をきっかけに起こすか。</dd>
+<dt>イベント</dt><dd>ドライバからの通知（I/O 完了やバッファ境界の通知）で起きます。起きるタイミングはドライバとハードウェアが決め、PC 側のタイマーには依存しません。ASIO 中継は常にこの方式です（ベンダードライバのコールバックで起きる）。</dd>
+<dt>タイマー</dt><dd>高分解能の待機タイマー（<code>CREATE_WAITABLE_TIMER_HIGH_RESOLUTION</code>）で定周期に起きます。WASAPI では <code>GetCurrentPadding</code> で空きを見ながら書き足し、ドライバ内のバッファを周期の数倍持てるので、短い周期でもイベント駆動より余裕があります。WASAPI でドライバが受け付けないときは、受け付けられる組み合わせを順に試し、パネル 3 行目に使ったものを表示します。</dd>
+<dt>タイマー＋スピン</dt><dd>タイマーで少し手前まで眠り、最後の数十 µs はビジーウェイトで待ちます。起床時刻のばらつきは最小になりますが、待っている間 CPU コアを 1 つ使い続けます（消費電力・発熱・ファンの回転が増えます）。</dd>
+</dl>
+<div class="note">起床時刻のばらつき（パネルのヒストグラム）は PC 内のスケジューリングのばらつきで、DAC の出力ジッターとは別物です。非同期 USB の DAC では、実際の再生タイミングは DAC 自身のクロックが決め、PC の起床のばらつきはドライバと DAC 内のバッファで吸収されます。</div>
+</div>
+
+<div class="param" id="p-ksq">
+<h3>KS キュー深さ <span class="tag reopen">開</span></h3>
+<div class="meta">範囲: 2〜16 / 既定: 4（KS パケット方式で有効）</div>
+<dl>
+<dt>決めるもの</dt><dd>ドライバへ送り込んでおくパケットの数。1 つが完了するたびに次のデータを詰めて送り直すので、常にこの数だけドライバの中に待機しています。</dd>
+</dl>
+<div class="updown">
+<div><b>増やすと</b>出力スレッドが一時的に遅れてもドライバ側のデータが尽きにくくなります。遅延は「1 パケットの長さ × 数」だけ増えます。受け渡し周期を高くする（パケットを小さくする）ときは増やすのが定石です。</div>
+<div><b>減らすと</b>遅延は減りますが、余裕が「パケット 1〜2 個分」しかなくなり、高い周期ではアンダーランしやすくなります。</div>
+</div>
+</div>
+
+<div class="param" id="p-rtlead">
+<h3>WaveRT 書き込み先行量（ms） <span class="tag now">即</span></h3>
+<div class="meta">範囲: 1〜500 / 既定: 20（KS WaveRT のタイマー駆動・通知なしのとき有効）</div>
+<dl>
+<dt>決めるもの</dt><dd>ハードウェアの再生位置より何 ms 先までデータを書いておくか。再生位置は位置レジスタの直読み（なければ位置プロパティ）で取ります。</dd>
+</dl>
+<div class="updown">
+<div><b>増やすと</b>余裕が増え、追い越し（アンダーラン）に強くなります。遅延も増えます。</div>
+<div><b>減らすと</b>遅延は減りますが、出力スレッドの起床が遅れたときに再生位置に追い越されやすくなります。追い越されたらアンダーランとして数えます。</div>
+</div>
+</div>
+
+<div class="param" id="p-prio">
+<h3>出力スレッド優先度 <span class="tag now">即</span></h3>
+<div class="meta">MMCSS Pro Audio / MMCSS Pro Audio＋Critical / TimeCritical（MMCSS なし）（既定: ＋Critical）</div>
+<dl>
+<dt>決めるもの</dt><dd>出力スレッドが CPU を取り合う強さ。</dd>
+<dt>MMCSS Pro Audio</dt><dd>Windows のマルチメディアクラススケジューラに「プロオーディオ」として登録し、一定時間はリアルタイム帯の高い優先度に引き上げてもらいます。</dd>
+<dt>＋Critical</dt><dd>MMCSS の中でもさらに上の優先度（<code>AVRT_PRIORITY_CRITICAL</code>）。他の MMCSS スレッド（他の再生ソフトなど）より先に動きます。</dd>
+<dt>TimeCritical</dt><dd>MMCSS を使わず、通常のスレッド優先度の最上位（<code>THREAD_PRIORITY_TIME_CRITICAL</code>）にします。MMCSS の時間制限は受けませんが、リアルタイム帯の MMCSS スレッドよりは下になります。</dd>
+<dt>補足</dt><dd>優先度を上げても処理が速くなるわけではなく、「呼ばれたらすぐ動ける」ようになるだけです。ASIO 中継では出力スレッドはベンダードライバのものなので、この設定は効きません。</dd>
+</dl>
+</div>
+
+<div class="param" id="p-core">
+<h3>CPU コア固定 <span class="tag now">即</span></h3>
+<div class="meta">自動 / コア番号（既定: 自動）</div>
+<dl>
+<dt>決めるもの</dt><dd>出力スレッドを特定の論理プロセッサーだけで動かすか。</dd>
+</dl>
+<div class="updown">
+<div><b>固定すると</b>コア間の移動がなくなり、キャッシュの再読み込みが減って起床後の処理時間が安定します。USB の割り込み処理（DPC）が集中するコアとは別のコアを選ぶと効果的です。Core i7-14700F のような P コア / E コア混在の CPU では、一般に番号の若い側が P コアです（タスクマネージャーやデバイスの情報で確認してください）。</div>
+<div><b>自動にすると</b>Windows が空いているコアを選びます。たまたま忙しいコアや E コアに載ると、起床から処理までの時間がばらつくことがあります。</div>
+</div>
+</div>
+
+<div class="param" id="p-timer">
+<h3>タイマー分解能 <span class="tag now">即</span></h3>
+<div class="meta">OS 既定 / 1 ms / 0.5 ms（既定: OS 既定）</div>
+<dl>
+<dt>決めるもの</dt><dd>Windows のタイマー割り込みの間隔（<code>timeBeginPeriod</code> / <code>NtSetTimerResolution</code>）。システム全体に効きます。</dd>
+</dl>
+<div class="updown">
+<div><b>細かくすると</b>通常のスリープやタイマーの精度が上がります（高分解能タイマーを使う本ドライバのタイマー駆動にはもともと影響は小さめ）。タイマー割り込みが 1 秒あたり 1000〜2000 回に増え、CPU が深く休めなくなり、消費電力が増えます。</div>
+<div><b>OS 既定にすると</b>Windows に任せます（最近の Windows は必要なプロセスにだけ細かい分解能を割り当てます）。</div>
+</div>
+</div>
+
+<div class="param" id="p-memlock">
+<h3>メモリ固定（VirtualLock） <span class="tag reopen">開</span></h3>
+<div class="meta">オン / オフ（既定: オン）</div>
+<dl>
+<dt>決めるもの</dt><dd>リングバッファと KS パケット用のメモリを物理メモリに固定するか。</dd>
+<dt>効果</dt><dd>オンにすると、メモリが足りなくなったときにリングがページファイルへ追い出され、読み出し時にページフォールト（ディスク待ち）が起きることを防ぎます。オフでも普段は問題ありませんが、メモリが逼迫したときの保険になります。固定に失敗しても動作は続け、パネルにメッセージを出します。</dd>
+</dl>
+</div>
+
+<div class="param" id="p-dsd">
+<h3>DSD の送り方・DoP 上限 <span class="tag reset">再</span></h3>
+<div class="meta">送り方: 自動 / ネイティブ / DoP（既定: 自動） ・ DoP 上限: DSD64 / DSD128 / DSD256 / DSD512（既定: DSD256）</div>
+<dl>
+<dt>決めるもの</dt><dd>再生ソフトから受け取った ASIO ネイティブ DSD を、出口へどう渡すか。</dd>
+<dt>自動</dt><dd>ASIO 中継で相手のドライバがネイティブ DSD に対応していればネイティブ、そうでなければ DoP。</dd>
+<dt>DoP</dt><dd>DSD 16 ビットぶんを 24bit PCM の下位 16 ビットに入れ、上位 8 ビットに目印（0x05 / 0xFA を交互）を入れます。PCM レート = DSD レート ÷ 16（DSD64 → 176.4 kHz、DSD256 → 705.6 kHz）。DAC が対応する PCM レートの上限で、DoP で送れる DSD の上限が決まります。</dd>
+<dt>DoP 上限</dt><dd>DoP で送ってよい DSD レートの上限です。これを超える DSD は、DoP で送ることになる出口（KS・WASAPI・ネイティブ非対応の ASIO 中継）では再生ソフトに「非対応」と返します。再生ソフトが DSD256 や PCM への変換に切り替えられるようにするためです。DSD512 の DoP は 1411.2 kHz の PCM が必要で、D400EX（PCM は 768 kHz まで）を含む多くの DAC は受け付けず、送ると「ジジジ」という雑音になります。DAC が 1411.2 kHz の DoP に対応している場合だけ DSD512 にしてください。ネイティブ DSD で送れるときは、この上限は関係ありません。</dd>
+</dl>
+</div>
+
+<div class="param" id="p-silence">
+<h3>開始時の無音（ms） <span class="tag now">即</span></h3>
+<div class="meta">範囲: 0〜2000 / 既定: 300（次の再生開始から）</div>
+<dl>
+<dt>決めるもの</dt><dd>再生開始時に、本来の音の前に流す無音の長さ。</dd>
+<dt>効果</dt><dd>DAC がレートや形式の切り替えでロックし直す（ミュートが解除される）までの時間を稼ぎ、曲の頭が欠けるのを防ぎます。頭が欠けるなら増やし、曲間の間を詰めたいなら減らします。DSD では停止時にも無音パターン（0x69）を約 60 ms 流してから止め、ポップノイズを防ぎます。</dd>
+</dl>
+</div>
+
+<div class="param" id="p-drain">
+<h3>停止時に溜めた分を鳴らし切る <span class="tag now">即</span></h3>
+<div class="meta">オン / オフ（既定: オン）</div>
+<dl>
+<dt>決めるもの</dt><dd>再生ソフトが停止（stop）したとき、リングに溜まっているまだ鳴っていない分と、最後に受け取ったバッファを鳴らし終えてから止めるか、すぐ捨てて止めるか。</dd>
+</dl>
+<div class="updown">
+<div><b>オンにすると</b>再生リストの最後の曲の終わりや、次の曲でサンプルレートが変わって開き直す直前の曲の終わりが欠けません。代わりに、停止ボタンやシークの反応が、溜めていた量（先読みモードで最大 2 秒）だけ遅れます。同期モードでは数十 ms です。</div>
+<div><b>オフにすると</b>停止・シークは即座に反応しますが、溜めていた分は捨てるので、先読みモードでは曲の終わりが最大で先読み量の秒数だけ欠けることがあります。</div>
+</div>
+</div>
+
+<div class="param" id="p-fallback">
+<h3>KS で開けないときは WASAPI 排他に自動で切り替える <span class="tag reopen">開</span></h3>
+<div class="meta">オン / オフ（既定: オン）</div>
+<dl>
+<dt>決めるもの</dt><dd>KS のピンが開けないとき（Windows の共有モードがデバイスを使っているなど）に、WASAPI 排他で鳴らすか、エラーにするか。切り替わったときはパネル下部のメッセージに出ます。KS で鳴っていることを確実にしたいときはオフにします。</dd>
+</dl>
+</div>
+
+<h2 id="taste">音の好みから設定を探す</h2>
+<div class="warn"><b>先に大事なこと</b>: OtonumaASIO はビットパーフェクトなので、どの設定でも DAC に届くデータは同じです（パネルの「パイプライン内ビット一致」で確認できます）。そのうえで音の印象が変わるという報告は多くありますが、非同期 USB DAC でそれが測定として裏付けられた例はほとんどありません。考えられる経路は、PC の動き方（起床の頻度・CPU 負荷・電源の揺れ）が USB ケーブルやグラウンドを通る電気的なノイズとして DAC に影響する、というものです。以下は<b>「そう言われることが多い傾向」</b>で、効く保証はありません。必ず <a href="#abx">ABX</a> で、本当に聞き分けられるかを確かめてください。</div>
+
+<h3>音色を確実に変えられるのは DAC 側の設定</h3>
+<p>データそのものに手を入れるのは DAC 内部のデジタルフィルターです。D400EX には PCM フィルター（6 種類）と DSD フィルター（Wide / Narrow）の選択があり、ここは実際に周波数特性やインパルス応答（リンギング）が変わります。「柔らかい」「広がる」と表現されることが多いのは、一般に <b>Slow Roll-Off</b> や <b>最小位相</b>系のフィルター（プリリンギングがない、または高域がなだらかに落ちる）です。差はわずかとされますが、測定上の違いがある分、パラメータ調整より確実です。PCM を DSD に変換して再生する（アップサンプリング）のも、データ自体が変わるので音色に影響します。</p>
+
+<h3>出発点の例</h3>
+<div class="cols">
+<div class="preset">
+<h4>柔らかく広がる方向（通説ベース）</h4>
+<table>
+<tr><td>出力方式</td><td>KS パケット または ASIO 中継</td></tr>
+<tr><td>受け渡し周期</td><td>10〜50 Hz（低め）</td></tr>
+<tr><td>駆動方式</td><td>イベント</td></tr>
+<tr><td>ホスト側バッファ</td><td>2048〜4096</td></tr>
+<tr><td>ポンプモード</td><td>先読み（1〜2 秒）</td></tr>
+<tr><td>KS キュー深さ</td><td>4〜8</td></tr>
+<tr><td>優先度</td><td>MMCSS Pro Audio</td></tr>
+<tr><td>タイマー分解能</td><td>OS 既定</td></tr>
+<tr><td>D400EX</td><td>PCM フィルターを Slow Roll-Off 系に</td></tr>
+</table>
+<p style="font-size:13.5px;color:var(--mute)">考え方: PC の起床と割り込みを減らし、静かに動かす。大きな塊でまとめて渡す。</p>
+</div>
+<div class="preset">
+<h4>輪郭がくっきりする方向（通説ベース）</h4>
+<table>
+<tr><td>出力方式</td><td>KS パケット</td></tr>
+<tr><td>受け渡し周期</td><td>300〜1000 Hz（高め）</td></tr>
+<tr><td>駆動方式</td><td>イベント または タイマー＋スピン</td></tr>
+<tr><td>ホスト側バッファ</td><td>256〜1024</td></tr>
+<tr><td>ポンプモード</td><td>同期</td></tr>
+<tr><td>KS キュー深さ</td><td>8〜16（周期を上げた分）</td></tr>
+<tr><td>優先度</td><td>＋Critical または TimeCritical</td></tr>
+<tr><td>タイマー分解能</td><td>0.5 ms</td></tr>
+<tr><td>D400EX</td><td>PCM フィルターを Sharp Roll-Off 系に</td></tr>
+</table>
+<p style="font-size:13.5px;color:var(--mute)">考え方: 小さな塊を途切れなく流し、起床時刻をそろえる。</p>
+</div>
+</div>
+<h3>探し方の手順</h3>
+<ol>
+<li>まず WASAPI 排他・既定値で鳴らし、プリセット「基準」として保存します。</li>
+<li>一度に 1 項目だけ変え、別名のプリセットで保存します（例:「KS 10Hz」「KS 300Hz」）。</li>
+<li>アンダーランが 0 のまま安定することを確認します（アンダーランがあると、それ自体が音の違いになってしまいます）。</li>
+<li>2 つのプリセットで ABX を 10〜20 回行い、p &lt; 0.05 になるかを見ます。偶然の範囲なら、その項目は「どちらでもよい」と判断できます。</li>
+</ol>
+
+<h2 id="dsd">DSD</h2>
+<ul>
+<li>再生ソフトからは ASIO ネイティブ DSD（<code>ASIOSTDSDInt8MSB1</code>）で受け取ります。</li>
+<li>出口がネイティブ対応でなければ DoP に包みます。DoP の目印は無音部分も含めて途切れず交互に付けます。</li>
+<li>停止時は DSD の無音パターン（0x69）を約 60 ms 流してから止めます。</li>
+<li>DSD のとき再生ソフトへ提示するバッファは、DSD レートに比例させて最低約 5.8 ms ぶんにしています。</li>
+<li>高いレートの DoP（DSD256 → 705.6 kHz など）は、DAC とドライバがその PCM レートを受け付けることが前提です。DoP 上限（既定 DSD256）を超える DSD は、DoP の経路では再生ソフトに非対応と返します。それより上はネイティブ DSD（ASIO 中継）で再生してください。</li>
+</ul>
+
+<h2 id="telemetry">計測の読み方（パネル右上）</h2>
+<table>
+<tr><th>表示</th><th>意味と見方</th></tr>
+<tr><td>経路（1 行目）</td><td>再生ソフト名 → レート・形式（PCM / DSD→DoP / DSD ネイティブ）→ ビット深度（有効 / コンテナ）→ 出力方式 → デバイス名。</td></tr>
+<tr><td>状態（2 行目）</td><td>受け渡し周期の指定値 → 実効値、1 回のフレーム数、ホスト側バッファ、再生ソフトに報告している遅延。</td></tr>
+<tr><td>出口の詳細（3 行目）</td><td>例:「KS パケット方式 / 32/32 bit / 48 フレーム × 4 個」。末尾は再生ソフトからの受け取り方（outputReady / その場で書き込み / 後から書き込み）。</td></tr>
+<tr><td>リング残量</td><td>今溜まっている量 / 目標 / 容量。残量が 0 近くを行き来していたら余裕不足です。</td></tr>
+<tr><td>アンダーラン</td><td>回数と直近の時刻。リングが空になった、WaveRT で追い越された、KS パケットが全部空になった、のいずれか。0 が正常です。</td></tr>
+<tr><td>出力スレッド起床間隔</td><td>期待値（1 回の量の時間）と実際の平均、期待値とのずれの中央値・99%値・最大値（µs）と、そのヒストグラム（対数目盛）。ずれが期待値の半分を超えるような山があると、アンダーランの予備軍です。</td></tr>
+<tr><td>CPU</td><td>出力スレッドの CPU 使用率（ASIO 中継では表示されません）。タイマー＋スピンではほぼ 1 コア分になります。</td></tr>
+<tr><td>パイプライン内ビット一致</td><td>再生ソフトから受け取ったデータと出口へ渡したデータの CRC を 1 秒ごとに照合した結果。「一致」が正常です。</td></tr>
+</table>
+
+<h2 id="abx">ブラインド A/B（ABX）</h2>
+<ol>
+<li>比べたい 2 つの設定をプリセットに保存します。出力方式・デバイス・ホスト側バッファ・DSD の送り方は同じにしてください（これらは再生ソフトの再初期化が必要で、切り替え方で判別できてしまうため）。</li>
+<li>A・B・回数を選んで、再生しながら「開始」。</li>
+<li>毎回パネルが X = A か B かを乱数で決め、伏せたまま切り替えます。「A を聴く」「B を聴く」「X を聴く」で何度でも聴き直せます。どの切り替えでも必ず同じ「開き直し」をするので、途切れ方で判別はできません。</li>
+<li>「X は A」「X は B」で答えます。</li>
+<li>終わると正解数と、偶然でそれ以上当たる確率（二項検定の p 値）を表示し、元の設定に戻します。「CSV 保存」で記録できます。</li>
+</ol>
+<table>
+<tr><th>回数</th><th>p &lt; 0.05 に必要な正解数</th></tr>
+<tr><td>10 回</td><td>9 回以上</td></tr>
+<tr><td>16 回</td><td>12 回以上</td></tr>
+<tr><td>20 回</td><td>15 回以上</td></tr>
+</table>
+
+<h2 id="test">試験のしかた</h2>
+<p><code>asiohosttest</code> はドライバを読み込んで正弦波またはランプ信号を流す簡易ホストです。</p>
+<pre><code>asiohosttest --list                                   登録されている ASIO ドライバの一覧
+asiohosttest --rate 96000 --seconds 10 --pattern sine 1 kHz の正弦波（実機の音出し確認）
+asiohosttest --dsd --rate 2822400                     DSD64 のランプ信号
+asiohosttest --dll OtonumaASIO64.dll ...          登録せずに DLL を直接読み込む
+asiohosttest --lazy / --outready / --strict           後から埋める / outputReady で知らせる /
+                                                      通知を受けたら開き直す再生ソフトを真似る</code></pre>
+<p>null 出力でビット一致を確かめる手順:</p>
+<ol>
+<li>パネルで出力方式を「null（試験用）」にして適用。</li>
+<li><code>set OTO_NULL_DUMP=C:\temp\dump.raw</code> のあと <code>asiohosttest --rate 44100 --seconds 5</code></li>
+<li><code>asiohosttest --verify C:\temp\dump.raw --bits 32</code>（DSD は <code>--dsd</code> も付ける）で「不一致 0」なら一致。<code>OTO_NULL_BITS=24</code> / <code>16</code> でコンテナ形式を変えられます。</li>
+</ol>
+
+<h2 id="trouble">困ったとき</h2>
+<table>
+<tr><th>症状</th><th>原因と対処</th></tr>
+<tr><td>再生ソフトに OtonumaASIO が出ない</td><td><code>otonumareg status</code> で登録を確認。32bit の再生ソフトには 32bit 版 DLL の登録が必要です。</td></tr>
+<tr><td>init に失敗する</td><td>別の再生ソフトが使用中です（同時に動けるのは 1 つ）。ウイルス対策ソフトのブロックも確認してください。</td></tr>
+<tr><td>KS で開けない</td><td>Windows の既定のデバイスを別の出力先にします。自動切替がオンなら WASAPI 排他で鳴り、メッセージ欄に理由が出ます。</td></tr>
+<tr><td>音飛びする</td><td>アンダーランの回数を見ます。増えていれば余裕不足なので、受け渡し周期を下げる・KS キュー深さを増やす・ホスト側バッファを増やす・先読みモードにする、の順に試します。増えていないのに飛ぶ場合は、パネル右上の 3 行を添えて報告してください。</td></tr>
+<tr><td>WASAPI 排他で周期を上げると飛ぶ</td><td>イベント駆動ではドライバ内のバッファ長が周期と同じになるため、最小周期付近では余裕がありません。少し下げるか、タイマー駆動にします。</td></tr>
+<tr><td>DSD で雑音しか出ない</td><td>DoP のレート（DSD ÷ 16）を DAC が受け付けていない可能性があります。「DoP 上限」を DAC が対応する範囲（D400EX なら DSD256）にするか、ASIO 中継のネイティブ DSD を使ってください。</td></tr>
+<tr><td>先読み中に、再生ソフトが曲の途中で次の曲を表示する</td><td>先読みの仕組み上避けられません（<a href="#p-pump">ポンプモード・先読み量</a>）。気になる場合は同期モードにするか、先読み量を減らしてください。</td></tr>
+<tr><td>曲の頭が欠ける</td><td>開始時の無音を増やします。</td></tr>
+</table>
+
+<h2 id="internals">内部仕様</h2>
+<ul>
+<li>設定: <code>%APPDATA%\OtonumaASIO\settings.json</code>（<code>current</code> = 今の設定、<code>presets</code> = プリセット、<code>devices</code> = デバイスごとの最終設定）。</li>
+<li>計測: 共有メモリ <code>Local\OtonumaASIO.Telemetry</code>（DLL が 100 ms ごとに書き、パネルは読むだけ）。</li>
+<li>操作: 名前付きパイプ <code>\\.\pipe\OtonumaASIO.Control</code>（<code>PING</code> / <code>GET</code> / <code>SET {json}</code> / <code>SETQ {json}</code> / <code>REOPEN</code> / <code>VENDORPANEL</code>）。</li>
+<li>スレッド: ポンプ（再生ソフトを呼ぶ、MMCSS Pro Audio）／出力（出口ごとの送り出し、設定した優先度）／計測（低優先度）／管理（デバイスの開閉、ベンダー ASIO のためのメッセージループ）／操作パイプ。出力スレッドではメモリ確保・ロック・ログ出力をしません。</li>
+<li>再生ソフトからの受け取り: ASIO の規約では、再生ソフトはバッファを「次の呼び出しまでに」埋めればよいので、outputReady で知らせるソフトは知らせを受けて、その場で埋めるソフトは戻った直後に、後から埋めるソフトは 3/4 周期待ってから受け取ります（自動判定）。</li>
+<li>再生ソフトへの通知: 遅延変更の通知は、再生中に設定変更で遅延が実際に変わったときだけ 1 回送ります。再同期要求は送りません（通知を受けて開き直す再生ソフトで、開き直しが繰り返されるのを防ぐため）。</li>
+</ul>
+
+<h2 id="history">変更履歴</h2>
+<ul>
+<li><b>1.1.1</b>: <code>install.bat</code> / <code>uninstall.bat</code> で、登録ツールを実行した後のメッセージが文字化けする不具合を修正（登録ツールと試験ホストが、終了時にコンソールの文字コードを元に戻すようにした）。</li>
+<li><b>1.1.0</b>: 名前を BareStream Local から <b>OtonumaASIO</b> に変更（DLL・パネル・登録ツールのファイル名、再生ソフトに表示されるドライバ名、CLSID、設定の置き場所 <code>%APPDATA%\OtonumaASIO\settings.json</code>）。旧設定は初回に自動で引き継ぎ、<code>install.bat</code> が旧版を自動で片付ける。</li>
+<li><b>1.0.6</b>: インストール用 <code>install.bat</code> とアンインストール用 <code>uninstall.bat</code> を同梱（管理者として自動で実行し直す）。</li>
+<li><b>1.0.5</b>: コントロールパネルのタスクトレイ常駐に対応（クリックで開く、状態を色とツールチップで表示、右クリックでプリセット適用・Windows 起動時の常駐・終了）。</li>
+<li><b>1.0.4</b>: 「DoP 上限」を追加（既定 DSD256）。DoP で送れないレートの DSD は再生ソフトに非対応と返し、KS で DSD512 を送って雑音になる問題を防ぐ。「停止時に溜めた分を鳴らし切る」を追加（既定オン）し、先読み中に曲の終わりが欠ける問題を修正。先読み量の上限を 2 秒に変更。</li>
+<li><b>1.0.3</b>: DSD でホスト側バッファが極端に小さいとアンダーランが連続して雑音になる不具合を修正（DSD は最低約 5.8 ms を提示）。WASAPI 排他のタイマー駆動で初期化の組み合わせを順に試すようにした。1000 Hz の表示が「1e+03」になる不具合を修正。HTML マニュアル。</li>
+<li><b>1.0.2</b>: 再生開始のたびに遅延変更を通知していたため、TuneBrowser などで開き直しが繰り返され音が細切れになる不具合を修正。再同期要求を送らないようにした。</li>
+<li><b>1.0.1</b>: 呼び出しから戻った後にバッファを埋める再生ソフトで古い中身を拾う不具合を修正。outputReady に対応。</li>
+<li><b>1.0.0</b>: 最初の版。</li>
+</ul>
+
+<footer>OtonumaASIO — © 2026 Imaha486. MIT License. 本ソフトウェアは無保証です。ASIO は Steinberg Media Technologies GmbH の商標です。</footer>
+</main>
+</div>
+</body>
+</html>
